@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">SI_Max</string>
+    <string name="appbar_scrolling_view_behavior" translatable="false">android.support.design.widget.AppBarLayout$ScrollingViewBehavior</string>
+    <string name="movie_image">movie_image</string>
+    <string name="popular">Popular</string>
+    <string name="top_rated">Top Rated</string>
+    <string name="upcoming">Upcoming</string>
+    <string name="sort">Sort</string>
+    <string name="trailer_thumbs">trailer_thumbs</string>
+</resources>

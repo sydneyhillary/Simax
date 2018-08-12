@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="$PROJECT_DIR$/../CardView/CardView" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../FirebaseRecyclerViewTutorial" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../MYJURNL/7-day-challenge-journal-app" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/volley" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../SandwichClub" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../SimaxTrend" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../friendlychat-android" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../myrestaurants" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../quickstart-android" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../sandwich-club-starter-code" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../volley" vcs="Git" />
+  </component>
+</project>
