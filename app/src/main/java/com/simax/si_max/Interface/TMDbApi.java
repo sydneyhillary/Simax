@@ -40,6 +40,7 @@ public interface TMDbApi {
     );
     @GET("genre/movie/list")
     Call<GenresResponse> getGenres(
+            int movieId,
             @Query("api_key") String apiKey,
             @Query("language") String language
     );

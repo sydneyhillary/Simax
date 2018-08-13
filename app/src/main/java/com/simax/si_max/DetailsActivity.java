@@ -15,6 +15,7 @@ import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
+import com.simax.si_max.Interface.OnGetGenresCallback;
 import com.simax.si_max.Interface.OnGetMovieCallback;
 import com.simax.si_max.Interface.OnGetReviewsCallback;
 import com.simax.si_max.Interface.OnGetTrailersCallback;
@@ -25,6 +26,7 @@ import com.simax.si_max.model.Review;
 import com.simax.si_max.model.Trailer;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class DetailsActivity extends AppCompatActivity {
@@ -101,7 +103,6 @@ public class DetailsActivity extends AppCompatActivity {
 
                 movieRating.setVisibility(View.VISIBLE);
                 movieRating.setRating(movie.getRating() / 2);
-                getGenres(movie);
                 getTrailers(movie);
                 getReviews(movie);
                 movieReleaseDate.setText(movie.getReleaseDate());
@@ -120,9 +121,7 @@ public class DetailsActivity extends AppCompatActivity {
         });
     }
 
-    private void getGenres(final Movie movie) {
-        movie.getGenres();
-    }
+
 
     @Override
     public boolean onSupportNavigateUp() {
@@ -191,4 +190,6 @@ public class DetailsActivity extends AppCompatActivity {
             }
         });
     }
+
+
 }

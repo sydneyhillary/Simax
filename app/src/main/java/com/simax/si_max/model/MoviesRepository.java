@@ -5,6 +5,7 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.simax.si_max.BuildConfig;
+import com.simax.si_max.Interface.OnGetGenresCallback;
 import com.simax.si_max.Interface.OnGetMovieCallback;
 import com.simax.si_max.Interface.OnGetReviewsCallback;
 import com.simax.si_max.Interface.OnGetTrailersCallback;
@@ -155,6 +156,30 @@ public class MoviesRepository {
                     public void onFailure(Call<ReviewResponse> call, Throwable t) {
                         callback.onError();
                     }
+                });
+    }
+    public void getGenres(int movieId, final OnGetGenresCallback callback) {
+        api.getGenres(movieId, BuildConfig.API_KEY, LANGUAGE)
+                .enqueue(new Callback<GenresResponse>() {
+                    @Override
+                    public void onResponse(Call<GenresResponse> call, Response<GenresResponse> response) {
+                        if (response.isSuccessful()) {
+                            GenresResponse genresResponse = response.body();
+                            if (genresResponse != null && genresResponse.getGenres() != null) {
+                                callback.onSuccess(genresResponse.getGenres());
+                            } else {
+                                callback.onError();
+                            }
+                        } else {
+                            callback.onError();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<GenresResponse> call, Throwable t) {
+
+                    }
+
                 });
     }
 

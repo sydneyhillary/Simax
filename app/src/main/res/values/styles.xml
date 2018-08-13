@@ -8,11 +8,11 @@
         <item name="colorAccent">@color/newAccent</item>
     </style>
 
-    <style name="RatingBar" parent="Theme.AppCompat">
+    <style name="RatingBar" parent="android:Widget.Holo.RatingBar.Small">
         <item name="colorAccent">#ff0008</item>
         <item name="android:colorControlNormal" tools:targetApi="lollipop">#f9a825</item>
-        <item name="android:minHeight">23dip</item>
-        <item name="android:maxHeight">25dip</item>
+        <item name="android:progressTint" tools:targetApi="lollipop">#ff0008</item>
+
     </style>
 
 </resources>
