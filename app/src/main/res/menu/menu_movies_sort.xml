@@ -16,4 +16,9 @@
         android:enabled="true"
         android:title="Upcoming"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/favorite"
+        android:enabled="true"
+        android:title="@string/favorite"
+        app:showAsAction="never" />
 </menu>

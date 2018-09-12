@@ -1,36 +1,28 @@
 package com.simax.si_max;
 
 import android.content.Context;
-import android.content.Intent;
-import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.Animation;
-import android.view.animation.ScaleAnimation;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.simax.si_max.Interface.OnMoviesCallback;
-import com.simax.si_max.Interface.onGetMoviesCallback;
 import com.simax.si_max.model.Genre;
 import com.simax.si_max.model.Movie;
-import com.simax.si_max.model.MoviesRepository;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHolder> {
 
     private List<Movie> movies;
+    private List<Movie> movieList;
+    private Context mContext;
     private List<Genre> allGenres;
     private OnMoviesCallback callback;
     private String IMAGE_BASE_URL = "http://image.tmdb.org/t/p/w500";
@@ -39,6 +31,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
         this.movies = movies;
         this.callback = callback;
         this.allGenres = allGenres;
+        
     }
 
     @Override
@@ -55,6 +48,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
     @Override
     public int getItemCount() {
         return movies.size();
+
     }
 
     class MovieViewHolder extends RecyclerView.ViewHolder {
@@ -112,6 +106,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
     }
     public void clearMovies() {
         movies.clear();
+
         notifyDataSetChanged();
     }
 }

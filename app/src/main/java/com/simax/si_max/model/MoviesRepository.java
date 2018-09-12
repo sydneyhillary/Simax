@@ -1,7 +1,10 @@
 package com.simax.si_max.model;
 
+import android.annotation.SuppressLint;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
 import com.simax.si_max.BuildConfig;
@@ -11,6 +14,12 @@ import com.simax.si_max.Interface.OnGetReviewsCallback;
 import com.simax.si_max.Interface.OnGetTrailersCallback;
 import com.simax.si_max.Interface.TMDbApi;
 import com.simax.si_max.Interface.onGetMoviesCallback;
+import com.simax.si_max.MainActivity;
+import com.simax.si_max.MovieAdapter;
+import com.simax.si_max.database.FavoriteDbHelper;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -28,10 +37,14 @@ public class MoviesRepository {
     public static final String POPULAR = "popular";
     public static final String TOP_RATED = "top_rated";
     public static final String UPCOMING = "upcoming";
+    public static final String FAVORITE = "favorite";
 
     private static MoviesRepository repository;
 
     private TMDbApi api;
+    private List<Movie> movieList;
+    private FavoriteDbHelper favoriteDbHelper;
+    private MovieAdapter adapter;
 
     private MoviesRepository(TMDbApi api) {
         this.api = api;
@@ -82,6 +95,10 @@ public class MoviesRepository {
                 api.getUpcomingMovies(BuildConfig.API_KEY, LANGUAGE, page)
                         .enqueue(call);
                 break;
+            case FAVORITE:
+                movieList = new ArrayList<>();
+                //getAllFavorite();
+                break;
             case POPULAR:
             default:
                 api.getPopularMovies(BuildConfig.API_KEY, LANGUAGE, page)
@@ -89,6 +106,9 @@ public class MoviesRepository {
                 break;
         }
     }
+
+
+
     public void getMovie(int movieId, final OnGetMovieCallback callback) {
         api.getMovie(movieId, BuildConfig.API_KEY, LANGUAGE)
                 .enqueue(new Callback<Movie>() {
@@ -182,6 +202,8 @@ public class MoviesRepository {
 
                 });
     }
+
+
 
 }
 

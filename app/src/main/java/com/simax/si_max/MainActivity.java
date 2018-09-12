@@ -1,8 +1,14 @@
 package com.simax.si_max;
 
+import android.app.Activity;
+import android.content.ContentResolver;
+import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -14,25 +20,43 @@ import android.support.v7.widget.Toolbar;
 
 import com.simax.si_max.Interface.OnMoviesCallback;
 import com.simax.si_max.Interface.onGetMoviesCallback;
+import com.simax.si_max.database.FavoriteDbHelper;
 import com.simax.si_max.model.Movie;
 import com.simax.si_max.model.MoviesRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
 
+import static com.simax.si_max.DetailsActivity.MOVIE_ID;
+
 public class MainActivity extends AppCompatActivity {
+
+    //public static List<Movie> movies;
+    public static String[] dates;
+    public static String[] summary;
+    public static String[] votes;
+    public static String[] poster;
+    public static String[] backdrop;
+    public static String[] id;
+
     private MovieAdapter adapter;
     private MoviesRepository moviesRepository;
     private String sortBy = MoviesRepository.POPULAR;
+    public static ContentResolver contentResolver;
+
+    private List<Movie> movieList;
+    private FavoriteDbHelper favoriteDbHelper;
+    private AppCompatActivity activity = MainActivity.this;
 
     private boolean isFetchingMovies;
     private int currentPage = 1;
 
+    Movie movie;
+
 
     //String myApiKey = BuildConfig.API_KEY;
-
-    List<Movie> movies;
 
     //@BindView(R.id.moviesBar)
     //ProgressBar mProgressBar;
@@ -45,6 +69,15 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        movie = getIntent().getParcelableExtra(MOVIE_ID);
+
+        //poster = movie.getPosterPath();
+        //movieName = movie.getTitle();
+        //summary = movie.getOverview();
+        //votes = Float.toString(movie.getRating());
+        //dates = movie.getReleaseDate();
+        //id = movie.getId();
+
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -54,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(new GridLayoutManager(this, numberOfColumns));
         //recyclerView.setLayoutManager(new LinearLayoutManager(this));
         moviesRepository = MoviesRepository.getInstance();
-        adapter = getMovies(currentPage);;
+        adapter = getMovies(currentPage);
         recyclerView.setAdapter(adapter);
 
         setupOnScrollListener();
@@ -122,6 +155,9 @@ public class MainActivity extends AppCompatActivity {
                         sortBy = MoviesRepository.UPCOMING;
                         getMovies(currentPage);
                         return true;
+                    case R.id.favorite:
+                        setTitle(getString(R.string.favorite));
+                        initViews();
                     default:
                         return false;
                 }
@@ -130,6 +166,66 @@ public class MainActivity extends AppCompatActivity {
         sortMenu.inflate(R.menu.menu_movies_sort);
         sortMenu.show();
     }
+
+    private void initViews() {
+        //List<Movie> movieList;
+        int numberOfColumns = 2;
+
+        recyclerView = (RecyclerView) findViewById(R.id.mGridView);
+
+        movieList = new ArrayList<>();
+        //adapter = getMovies(
+        adapter = new MovieAdapter(movieList, callback);
+
+        /*if (getActivity().getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT){
+            recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
+        } else {
+            recyclerView.setLayoutManager(new GridLayoutManager(this, 4));
+        }*/
+        recyclerView.setLayoutManager(new GridLayoutManager(this, numberOfColumns));
+        recyclerView.setItemAnimator(new DefaultItemAnimator());
+        recyclerView.setAdapter(adapter);
+        adapter.notifyDataSetChanged();
+        favoriteDbHelper = new FavoriteDbHelper(activity);
+
+        getAllFavorite();
+    }
+
+
+    private void getAllFavorite() {
+        new  AsyncTask<Void, Void, Void>() {
+
+            @Override
+            protected Void doInBackground(Void... params) {
+                movieList.clear();
+                movieList.addAll(favoriteDbHelper.getAllFavorite());
+                return null;
+
+            }
+            @Override
+            protected void onPreExecute() {
+                super.onPreExecute();
+            }
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                super.onPostExecute(aVoid);
+                adapter.notifyDataSetChanged();
+            }
+        }.execute();
+    }
+
+    public Activity getActivity(){
+        Context context = this;
+        while (context instanceof ContextWrapper){
+            if (context instanceof Activity){
+                return (Activity) context;
+            }
+            context = ((ContextWrapper) context).getBaseContext();
+        }
+        return null;
+
+    }
+
 
     private MovieAdapter getMovies(int page) {
         isFetchingMovies = true;
@@ -163,7 +259,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onClick(Movie movie) {
             Intent intent = new Intent(MainActivity.this, DetailsActivity.class);
-            intent.putExtra(DetailsActivity.MOVIE_ID, movie.getId());
+            intent.putExtra(MOVIE_ID, movie.getId());
             startActivity(intent);
         }
     };
@@ -178,9 +274,13 @@ public class MainActivity extends AppCompatActivity {
             case MoviesRepository.UPCOMING:
                 setTitle(getString(R.string.upcoming));
                 break;
+            case MoviesRepository.FAVORITE:
+                setTitle(getString(R.string.favorite));
+
         }
     }
     private void showError() {
         Toast.makeText(MainActivity.this, "Please check your internet connection.", Toast.LENGTH_SHORT).show();
     }
+
 }
