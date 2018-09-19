@@ -56,4 +56,5 @@ public interface TMDbApi {
             @Query("api_key") String apiKEy,
             @Query("language") String language
     );
+
 }

@@ -1,11 +1,16 @@
 package com.simax.si_max;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
+import android.content.Loader;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.AsyncTask;
+import android.support.v4.content.CursorLoader;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -14,17 +19,27 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.GridLayout;
+import android.widget.ImageView;
 import android.widget.PopupMenu;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.support.v7.widget.Toolbar;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
+import com.simax.si_max.data.FavoritesContract;
+import com.simax.si_max.data.FavoritesDbHelper;
 import com.simax.si_max.Interface.OnMoviesCallback;
 import com.simax.si_max.Interface.onGetMoviesCallback;
-import com.simax.si_max.database.FavoriteDbHelper;
+
 import com.simax.si_max.model.Movie;
 import com.simax.si_max.model.MoviesRepository;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import butterknife.BindView;
@@ -38,16 +53,17 @@ public class MainActivity extends AppCompatActivity {
     public static String[] summary;
     public static String[] votes;
     public static String[] poster;
-    public static String[] backdrop;
+    public static String[] title;
     public static String[] id;
 
+    private String IMAGE_BASE_URL = "http://image.tmdb.org/t/p/w500";
     private MovieAdapter adapter;
     private MoviesRepository moviesRepository;
     private String sortBy = MoviesRepository.POPULAR;
     public static ContentResolver contentResolver;
 
-    private List<Movie> movieList;
-    private FavoriteDbHelper favoriteDbHelper;
+    private ArrayList<Movie> movieList;
+    private FavoritesDbHelper favoriteDbHelper;
     private AppCompatActivity activity = MainActivity.this;
 
     private boolean isFetchingMovies;
@@ -157,7 +173,7 @@ public class MainActivity extends AppCompatActivity {
                         return true;
                     case R.id.favorite:
                         setTitle(getString(R.string.favorite));
-                        initViews();
+                        new FavouriteMoviesFetchTask().execute();
                     default:
                         return false;
                 }
@@ -186,33 +202,12 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setItemAnimator(new DefaultItemAnimator());
         recyclerView.setAdapter(adapter);
         adapter.notifyDataSetChanged();
-        favoriteDbHelper = new FavoriteDbHelper(activity);
+        favoriteDbHelper = new FavoritesDbHelper(activity);
 
-        getAllFavorite();
+
     }
 
 
-    private void getAllFavorite() {
-        new  AsyncTask<Void, Void, Void>() {
-
-            @Override
-            protected Void doInBackground(Void... params) {
-                movieList.clear();
-                movieList.addAll(favoriteDbHelper.getAllFavorite());
-                return null;
-
-            }
-            @Override
-            protected void onPreExecute() {
-                super.onPreExecute();
-            }
-            @Override
-            protected void onPostExecute(Void aVoid) {
-                super.onPostExecute(aVoid);
-                adapter.notifyDataSetChanged();
-            }
-        }.execute();
-    }
 
     public Activity getActivity(){
         Context context = this;
@@ -282,5 +277,91 @@ public class MainActivity extends AppCompatActivity {
     private void showError() {
         Toast.makeText(MainActivity.this, "Please check your internet connection.", Toast.LENGTH_SHORT).show();
     }
+
+
+
+    public void getFavs() {
+        Cursor cursor = getContentResolver().query(FavoritesContract.CONTENT_URI, null, null, null, null);
+        if (cursor != null) {
+            cursor.moveToPosition(-1);
+            try {
+                while (cursor.moveToNext()) {
+                    String title = cursor.getString(cursor.getColumnIndex
+                            (FavoritesContract.FavoritesEntry.COLUMN_TITLE));
+                    String movieId = cursor.getString(cursor.getColumnIndex
+                            (FavoritesContract.FavoritesEntry.COLUMN_MOVIE_ID));
+                    String plot = cursor.getString(cursor.getColumnIndex
+                            (FavoritesContract.FavoritesEntry.COLUMN_PLOT));
+                    String date = cursor.getString(cursor.getColumnIndex
+                            (FavoritesContract.FavoritesEntry.COLUMN_RELEASE_DATE));
+                    String vote = cursor.getString(cursor.getColumnIndex
+                            (FavoritesContract.FavoritesEntry.COLUMN_AVERAGE_VOTE));
+                    String path = cursor.getString(cursor.getColumnIndex
+                            (FavoritesContract.FavoritesEntry.COLUMN_POSTER_PATH));
+                    //Movie movie = new Movie(movieId, title, date, vote, plot, path);
+                    movieList.clear();
+                    movieList.add(movie);
+                }
+            } finally {
+                //adapter.setDataSource(movieList);
+                recyclerView.setAdapter(adapter);
+                //mLayoutManager.onRestoreInstanceState(listState);
+            }
+        }
+    }
+
+    public class FavouriteMoviesFetchTask extends AsyncTask<Void, Void, Void> {
+
+        Movie[] movies;
+        MovieAdapter newAdapter;
+
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            Uri uri = FavoritesContract.CONTENT_URI;
+            Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+            //Log.d(TAG, "doInBackground: cursor: " + cursor.getCount());
+
+            int count = cursor.getCount();
+            movies = new Movie[cursor.getCount()];
+            if (count == 0) {
+                return null;
+            }
+
+            if (cursor.moveToFirst()) {
+                do {
+                    int id = cursor.getInt(cursor.getColumnIndex(FavoritesContract.FavoritesEntry.COLUMN_MOVIE_ID));
+                    String name = cursor.getString(cursor.getColumnIndex(FavoritesContract.FavoritesEntry.COLUMN_TITLE));
+                    String posterPath = cursor.getString(cursor.getColumnIndex(FavoritesContract.FavoritesEntry.COLUMN_POSTER_PATH));
+
+                   // Log.d(TAG, "doInBackground: " + name + " and " + poster_path);
+
+                    movies[cursor.getPosition()] = new Movie(id, posterPath);
+
+                   // movie.setPosterPath(posterPath);
+                    //movie.setTitle(name);
+
+
+                } while (cursor.moveToNext());
+            }
+
+            
+            cursor.close();
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+
+            //adapter.clearMovies();
+            adapter.setMovieData(movies);
+            adapter.notifyDataSetChanged();
+            recyclerView.setVisibility(View.VISIBLE);
+
+        }
+    }
+
+
 
 }

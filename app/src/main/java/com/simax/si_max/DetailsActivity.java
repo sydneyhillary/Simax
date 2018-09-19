@@ -1,15 +1,14 @@
 package com.simax.si_max;
 
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.preference.PreferenceManager;
 import android.support.design.widget.Snackbar;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
-import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -21,22 +20,17 @@ import android.widget.Toast;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.github.ivbaranov.mfb.MaterialFavoriteButton;
-import com.simax.si_max.Interface.OnGetGenresCallback;
+import com.simax.si_max.data.FavoritesContract;
+import com.simax.si_max.data.FavoritesDbHelper;
 import com.simax.si_max.Interface.OnGetMovieCallback;
 import com.simax.si_max.Interface.OnGetReviewsCallback;
 import com.simax.si_max.Interface.OnGetTrailersCallback;
-import com.simax.si_max.database.FavoriteDbHelper;
-import com.simax.si_max.model.Genre;
 import com.simax.si_max.model.Movie;
 import com.simax.si_max.model.MoviesRepository;
 import com.simax.si_max.model.Review;
 import com.simax.si_max.model.Trailer;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-
-import static com.simax.si_max.MainActivity.contentResolver;
 
 public class DetailsActivity extends AppCompatActivity {
 
@@ -65,11 +59,19 @@ public class DetailsActivity extends AppCompatActivity {
 
     private MoviesRepository moviesRepository;
     private int movieId;
-    private FavoriteDbHelper favoriteDbHelper;
+    private FavoritesDbHelper favoriteDbHelper;
     private Movie favorite;
     private final AppCompatActivity activity = DetailsActivity.this;
 
     Movie movie;
+    private String mMovieTitle;
+    private int mMovieId;
+    private String mMoviePlot;
+    private String mMovieReaseDate;
+    private float mMovieAverageVote;
+    private String mMoviePosterPath;
+
+    private  Toast mFavoritesToast;
     String thumbnail;
     String movieName;
     String synopsis;
@@ -85,6 +87,14 @@ public class DetailsActivity extends AppCompatActivity {
         //intGotPosition=Integer.parseInt(gotPosition);
 
         movieId = getIntent().getIntExtra(MOVIE_ID, movieId);
+        Movie movie = getIntent().getParcelableExtra(MOVIE_ID);
+        if (movie != null) {
+            mMovieTitle = movie.getTitle();
+            mMovieId = movie.getId();
+            mMoviePlot = movie.getOverview();
+            mMovieReaseDate = movie.getReleaseDate();
+            mMovieAverageVote = movie.getRating();
+            mMoviePosterPath = movie.getPosterPath();}
 
         moviesRepository = MoviesRepository.getInstance();
 
@@ -104,20 +114,11 @@ public class DetailsActivity extends AppCompatActivity {
                     @Override
                     public void onFavoriteChanged(MaterialFavoriteButton buttonView, boolean favorite){
                         if (favorite){
-                            SharedPreferences.Editor editor = getSharedPreferences("com.delaroystudios.movieapp.DetailActivity", MODE_PRIVATE).edit();
-                            editor.putBoolean("Favorite Added", true);
-                            editor.commit();
-                            saveToFavorite();
+                            addToFavorites();
                             Snackbar.make(buttonView, "Added to Favorite",
                                     Snackbar.LENGTH_SHORT).show();
                         }else{
-                            int movie_id = getIntent().getExtras().getInt("id");
-                            favoriteDbHelper = new FavoriteDbHelper(DetailsActivity.this);
-                            favoriteDbHelper.deleteFavorite(movie_id);
-
-                            SharedPreferences.Editor editor = getSharedPreferences("com.delaroystudios.movieapp.DetailActivity", MODE_PRIVATE).edit();
-                            editor.putBoolean("Favorite Removed", true);
-                            editor.commit();
+                           removeFromFavorites();
                             Snackbar.make(buttonView, "Removed from Favorite",
                                     Snackbar.LENGTH_SHORT).show();
                         }
@@ -128,30 +129,6 @@ public class DetailsActivity extends AppCompatActivity {
 
     }
 
-    private void saveToFavorite() {
-        FavoriteDbHelper favoriteDbHelper = new FavoriteDbHelper(this);
-        movie = getIntent().getParcelableExtra(MOVIE_ID);
-
-        //thumbnail = movie.getPosterPath();
-        //movieName = movie.getTitle();
-        //synopsis = movie.getOverview();
-        //rating = Float.toString(movie.getRating());
-        //dateOfRelease = movie.getReleaseDate();
-        //movie_id = movie.getId();
-
-        Movie favorite = new Movie();
-        //int movie_id = getIntent().getExtras().getInt("id");
-        //Float  rate = movie.getRating();
-        //String poster = getIntent().getExtras().getString("poster_path");
-
-        favorite.setId(movieId);
-        favorite.setTitle(movieName);
-        favorite.setPosterPath(thumbnail);
-        favorite.setRating(rating);
-        favorite.setOverview(synopsis);
-
-        favoriteDbHelper.addFavorite(favorite);
-    }
 
 
 
@@ -282,6 +259,36 @@ public class DetailsActivity extends AppCompatActivity {
             }
         });
     }
+    private void removeFromFavorites() {
+        getContentResolver().delete(FavoritesContract.CONTENT_URI,
+                FavoritesContract.FavoritesEntry.COLUMN_MOVIE_ID + "=?", new String[]{String.valueOf(mMovieId)});
+        if (mFavoritesToast!= null){
+            mFavoritesToast.cancel();
+        }
+        mFavoritesToast= Toast.makeText(this, "Movie removed from favorites", Toast.LENGTH_LONG);
+        mFavoritesToast.show();
+    }
 
+    private void addToFavorites() {
+        String id = MOVIE_ID;
+        String name = movieTitle.getText().toString();
+        String release_date = movieReleaseDate.getText().toString();
+        float rating = movieRating.getRating();
+        String overview = movieOverview.getText().toString();
+        String poster_path = mMoviePosterPath;
 
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(FavoritesContract.FavoritesEntry.COLUMN_MOVIE_ID, id);
+        contentValues.put(FavoritesContract.FavoritesEntry.COLUMN_TITLE, name);
+        contentValues.put(FavoritesContract.FavoritesEntry.COLUMN_PLOT, overview);
+        contentValues.put(FavoritesContract.FavoritesEntry.COLUMN_POSTER_PATH, poster_path);
+        contentValues.put(FavoritesContract.FavoritesEntry.COLUMN_RELEASE_DATE, release_date);
+        contentValues.put(FavoritesContract.FavoritesEntry.COLUMN_AVERAGE_VOTE, rating);
+
+        Uri uri = getContentResolver().insert(FavoritesContract.CONTENT_URI, contentValues);
+        if (uri != null) {
+            Toast.makeText(this, "Added to favourites", Toast.LENGTH_SHORT).show();
+        }
+
+    }
 }

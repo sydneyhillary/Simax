@@ -22,6 +22,12 @@
         <activity android:name=".DetailsActivity">
 
         </activity>
+
+        <provider
+            android:name=".data.FavoritesContentProvider"
+            android:authorities="com.simax.si_max"
+            android:exported="false"
+            />
     </application>
 
 </manifest>

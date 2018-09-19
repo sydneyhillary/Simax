@@ -16,6 +16,7 @@ import com.simax.si_max.model.Genre;
 import com.simax.si_max.model.Movie;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHolder> {
@@ -26,12 +27,17 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
     private List<Genre> allGenres;
     private OnMoviesCallback callback;
     private String IMAGE_BASE_URL = "http://image.tmdb.org/t/p/w500";
+    private Movie[] mDataSource;
+    private Movie[] moviesList;
 
     public MovieAdapter(List<Movie> movies, OnMoviesCallback callback) {
         this.movies = movies;
         this.callback = callback;
         this.allGenres = allGenres;
         
+    }
+    public void setMovieData(Movie[] movieData) {
+        this.movies = Arrays.asList(movieData);
     }
 
     @Override
@@ -51,6 +57,9 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
 
     }
 
+
+
+
     class MovieViewHolder extends RecyclerView.ViewHolder {
         TextView releaseDate;
         TextView title;
@@ -58,6 +67,15 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
         TextView genres;
         ImageView imageView;
         Movie movie;
+
+        void setDataSource(ArrayList<Movie> dataSource) {
+            mDataSource = dataSource.toArray(new Movie[0]);
+            notifyDataSetChanged();
+
+        }
+        public void favs(){
+
+        }
 
         public MovieViewHolder(View itemView) {
             super(itemView);
@@ -109,6 +127,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
 
         notifyDataSetChanged();
     }
+
 }
 
 

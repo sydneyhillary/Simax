@@ -1,8 +1,5 @@
 package com.simax.si_max.model;
 
-import android.arch.persistence.room.Entity;
-import android.arch.persistence.room.Ignore;
-import android.arch.persistence.room.PrimaryKey;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -12,6 +9,20 @@ import com.google.gson.annotations.SerializedName;
 import java.util.List;
 
 public class Movie implements Parcelable {
+
+    public Movie(int id, String poster_path) {
+        this.id = id;
+        this.posterPath = poster_path;
+    }
+
+
+    public String getPoster_path() {
+        return posterPath;
+    }
+
+    public void setPoster_path(String poster_path) {
+        this.posterPath = poster_path;
+    }
 
     @SerializedName("id")
     @Expose
@@ -71,6 +82,8 @@ public class Movie implements Parcelable {
         }
     };
 
+
+
     public String getOverview() {
         return overview;
     }
@@ -99,9 +112,6 @@ public class Movie implements Parcelable {
         return id;
     }
 
-    public Movie(){
-
-    }
 
     public void setId(int id) {
         this.id = id;
