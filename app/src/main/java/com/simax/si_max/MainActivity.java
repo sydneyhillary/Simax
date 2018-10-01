@@ -2,14 +2,20 @@ package com.simax.si_max;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.arch.lifecycle.Observer;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.Loader;
+import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Parcelable;
+import android.support.annotation.Nullable;
 import android.support.v4.content.CursorLoader;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -21,6 +27,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.GridLayout;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.TextView;
@@ -29,18 +36,19 @@ import android.support.v7.widget.Toolbar;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
-import com.simax.si_max.data.FavoritesContract;
-import com.simax.si_max.data.FavoritesDbHelper;
+
 import com.simax.si_max.Interface.OnMoviesCallback;
 import com.simax.si_max.Interface.onGetMoviesCallback;
 
 import com.simax.si_max.model.Movie;
 import com.simax.si_max.model.MoviesRepository;
+import com.simax.si_max.room.FavModel;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 
 import butterknife.BindView;
 
@@ -63,13 +71,22 @@ public class MainActivity extends AppCompatActivity {
     public static ContentResolver contentResolver;
 
     private ArrayList<Movie> movieList;
-    private FavoritesDbHelper favoriteDbHelper;
+
     private AppCompatActivity activity = MainActivity.this;
 
     private boolean isFetchingMovies;
     private int currentPage = 1;
 
+    private FavModel favModel;
+
     Movie movie;
+
+    static final String SOME_VALUE = "int_value";
+    static final String SOME_OTHER_VALUE = "string_value";
+
+    int someIntValue;
+    String someStringValue;
+
 
 
     //String myApiKey = BuildConfig.API_KEY;
@@ -80,12 +97,48 @@ public class MainActivity extends AppCompatActivity {
     @BindView(R.id.mGridView)
     RecyclerView recyclerView;
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        SharedPreferences settings = getSharedPreferences("Settings", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = settings.edit();
+        editor.putInt(SOME_VALUE, someIntValue);
+        editor.putString(SOME_OTHER_VALUE, someStringValue);
 
+        editor.apply();
+    }
+    @Override
+    protected void onSaveInstanceState(Bundle savedInstanceState) {
+        // Save custom values into the bundle
+        savedInstanceState.putInt(SOME_VALUE, someIntValue);
+        savedInstanceState.putString(SOME_OTHER_VALUE, someStringValue);
+        // Always call the superclass so it can save the view hierarchy state
+        super.onSaveInstanceState(savedInstanceState);
+    }
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        // Always call the superclass so it can restore the view hierarchy
+        super.onRestoreInstanceState(savedInstanceState);
+        // Restore state members from saved instance
+        someIntValue = savedInstanceState.getInt(SOME_VALUE);
+        someStringValue = savedInstanceState.getString(SOME_OTHER_VALUE);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        SharedPreferences settings = getSharedPreferences("Settings", Context.MODE_PRIVATE);
+        someIntValue = settings.getInt(SOME_VALUE, 0);
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+         setContentView(R.layout.activity_main);
         movie = getIntent().getParcelableExtra(MOVIE_ID);
+        favModel = ViewModelProviders.of(this).get(FavModel.class);
+
+
+
 
         //poster = movie.getPosterPath();
         //movieName = movie.getTitle();
@@ -94,13 +147,14 @@ public class MainActivity extends AppCompatActivity {
         //dates = movie.getReleaseDate();
         //id = movie.getId();
 
+        // Checks the orientation of the screen
+
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         recyclerView = (RecyclerView) findViewById(R.id.mGridView);
-        int numberOfColumns = 2;
-        recyclerView.setLayoutManager(new GridLayoutManager(this, numberOfColumns));
+
         //recyclerView.setLayoutManager(new LinearLayoutManager(this));
         moviesRepository = MoviesRepository.getInstance();
         adapter = getMovies(currentPage);
@@ -108,6 +162,19 @@ public class MainActivity extends AppCompatActivity {
 
         setupOnScrollListener();
 
+    }
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
+        // Checks the orientation of the screen
+        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            int numberOfColumns = 3;
+            recyclerView.setLayoutManager(new GridLayoutManager(this, numberOfColumns));
+        } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT){
+            int numberOfColumns = 2;
+            recyclerView.setLayoutManager(new GridLayoutManager(this, numberOfColumns));
+        }
     }
 
 
@@ -139,6 +206,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+
         switch (item.getItemId()) {
             case R.id.sort:
                 showSortMenu();
@@ -146,6 +214,7 @@ public class MainActivity extends AppCompatActivity {
             default:
                 return super.onOptionsItemSelected(item);
         }
+
     }
 
     private void showSortMenu() {
@@ -172,10 +241,12 @@ public class MainActivity extends AppCompatActivity {
                         getMovies(currentPage);
                         return true;
                     case R.id.favorite:
-                        setTitle(getString(R.string.favorite));
-                        new FavouriteMoviesFetchTask().execute();
+                        Intent intent = new Intent(MainActivity.this, FavoritesActivity.class);
+                        startActivity(intent);
+                        return true;
                     default:
-                        return false;
+                        recyclerView.setAdapter(adapter);
+                        return true;
                 }
             }
         });
@@ -193,31 +264,13 @@ public class MainActivity extends AppCompatActivity {
         //adapter = getMovies(
         adapter = new MovieAdapter(movieList, callback);
 
-        /*if (getActivity().getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT){
-            recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
-        } else {
-            recyclerView.setLayoutManager(new GridLayoutManager(this, 4));
-        }*/
+
         recyclerView.setLayoutManager(new GridLayoutManager(this, numberOfColumns));
         recyclerView.setItemAnimator(new DefaultItemAnimator());
         recyclerView.setAdapter(adapter);
         adapter.notifyDataSetChanged();
-        favoriteDbHelper = new FavoritesDbHelper(activity);
 
 
-    }
-
-
-
-    public Activity getActivity(){
-        Context context = this;
-        while (context instanceof ContextWrapper){
-            if (context instanceof Activity){
-                return (Activity) context;
-            }
-            context = ((ContextWrapper) context).getBaseContext();
-        }
-        return null;
 
     }
 
@@ -269,8 +322,7 @@ public class MainActivity extends AppCompatActivity {
             case MoviesRepository.UPCOMING:
                 setTitle(getString(R.string.upcoming));
                 break;
-            case MoviesRepository.FAVORITE:
-                setTitle(getString(R.string.favorite));
+
 
         }
     }
@@ -279,88 +331,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
-    public void getFavs() {
-        Cursor cursor = getContentResolver().query(FavoritesContract.CONTENT_URI, null, null, null, null);
-        if (cursor != null) {
-            cursor.moveToPosition(-1);
-            try {
-                while (cursor.moveToNext()) {
-                    String title = cursor.getString(cursor.getColumnIndex
-                            (FavoritesContract.FavoritesEntry.COLUMN_TITLE));
-                    String movieId = cursor.getString(cursor.getColumnIndex
-                            (FavoritesContract.FavoritesEntry.COLUMN_MOVIE_ID));
-                    String plot = cursor.getString(cursor.getColumnIndex
-                            (FavoritesContract.FavoritesEntry.COLUMN_PLOT));
-                    String date = cursor.getString(cursor.getColumnIndex
-                            (FavoritesContract.FavoritesEntry.COLUMN_RELEASE_DATE));
-                    String vote = cursor.getString(cursor.getColumnIndex
-                            (FavoritesContract.FavoritesEntry.COLUMN_AVERAGE_VOTE));
-                    String path = cursor.getString(cursor.getColumnIndex
-                            (FavoritesContract.FavoritesEntry.COLUMN_POSTER_PATH));
-                    //Movie movie = new Movie(movieId, title, date, vote, plot, path);
-                    movieList.clear();
-                    movieList.add(movie);
-                }
-            } finally {
-                //adapter.setDataSource(movieList);
-                recyclerView.setAdapter(adapter);
-                //mLayoutManager.onRestoreInstanceState(listState);
-            }
-        }
-    }
-
-    public class FavouriteMoviesFetchTask extends AsyncTask<Void, Void, Void> {
-
-        Movie[] movies;
-        MovieAdapter newAdapter;
-
-
-        @Override
-        protected Void doInBackground(Void... params) {
-            Uri uri = FavoritesContract.CONTENT_URI;
-            Cursor cursor = getContentResolver().query(uri, null, null, null, null);
-            //Log.d(TAG, "doInBackground: cursor: " + cursor.getCount());
-
-            int count = cursor.getCount();
-            movies = new Movie[cursor.getCount()];
-            if (count == 0) {
-                return null;
-            }
-
-            if (cursor.moveToFirst()) {
-                do {
-                    int id = cursor.getInt(cursor.getColumnIndex(FavoritesContract.FavoritesEntry.COLUMN_MOVIE_ID));
-                    String name = cursor.getString(cursor.getColumnIndex(FavoritesContract.FavoritesEntry.COLUMN_TITLE));
-                    String posterPath = cursor.getString(cursor.getColumnIndex(FavoritesContract.FavoritesEntry.COLUMN_POSTER_PATH));
-
-                   // Log.d(TAG, "doInBackground: " + name + " and " + poster_path);
-
-                    movies[cursor.getPosition()] = new Movie(id, posterPath);
-
-                   // movie.setPosterPath(posterPath);
-                    //movie.setTitle(name);
-
-
-                } while (cursor.moveToNext());
-            }
-
-            
-            cursor.close();
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-
-            //adapter.clearMovies();
-            adapter.setMovieData(movies);
-            adapter.notifyDataSetChanged();
-            recyclerView.setVisibility(View.VISIBLE);
-
-        }
-    }
 
 
 

@@ -8,7 +8,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
 import com.simax.si_max.BuildConfig;
-import com.simax.si_max.data.FavoritesDbHelper;
+
 import com.simax.si_max.Interface.OnGetGenresCallback;
 import com.simax.si_max.Interface.OnGetMovieCallback;
 import com.simax.si_max.Interface.OnGetReviewsCallback;
@@ -44,7 +44,7 @@ public class MoviesRepository {
 
     private TMDbApi api;
     private List<Movie> movieList;
-    private FavoritesDbHelper favoriteDbHelper;
+
     private MovieAdapter adapter;
 
     private MoviesRepository(TMDbApi api) {
@@ -203,6 +203,8 @@ public class MoviesRepository {
 
                 });
     }
+
+
 
 
 

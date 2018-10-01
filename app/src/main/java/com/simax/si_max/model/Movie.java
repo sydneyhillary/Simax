@@ -1,63 +1,106 @@
 package com.simax.si_max.model;
 
+import android.arch.persistence.room.ColumnInfo;
+import android.arch.persistence.room.Entity;
+import android.arch.persistence.room.Ignore;
+import android.arch.persistence.room.PrimaryKey;
 import android.os.Parcel;
-import android.os.Parcelable;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class Movie implements Parcelable {
+@Entity (tableName = "favorites")
+public class Movie implements Serializable {
 
-    public Movie(int id, String poster_path) {
+
+    public Movie(int id, String name, String release_date, float rating, String overview, String poster_path) {
         this.id = id;
         this.posterPath = poster_path;
+        this.title = name;
+        this.rating = rating;
+        this.overview = overview;
+        this.releaseDate = release_date;
     }
 
 
-    public String getPoster_path() {
-        return posterPath;
+    public Movie() {
     }
 
-    public void setPoster_path(String poster_path) {
-        this.posterPath = poster_path;
+    public Movie(int position) {
+        this.id = position;
+    }
+
+
+    @Override
+    public boolean equals(Object obj) {
+        return super.equals(obj);
+    }
+
+
+    @Override
+    public String toString() {
+        return "Movie{" +
+                "id=" + id +
+                ", title='" + title + '\'' +
+                ", posterPath='" + posterPath + '\'' +
+                ", releaseDate='" + releaseDate + '\'' +
+                ", rating='" + rating + '\'' +
+                ", overview='" + overview + '\'' +
+                ", backdrop='" + backdrop + '\'' +
+                '}';
+
     }
 
     @SerializedName("id")
     @Expose
-    private int id;
+    @PrimaryKey
+    public int id;
+
 
     @SerializedName("title")
     @Expose
-    private String title;
+    @ColumnInfo(name = "title")
+    public String title;
 
     @SerializedName("poster_path")
     @Expose
-    private String posterPath;
+    @ColumnInfo(name = "posterPath")
+    public String posterPath;
+
 
     @SerializedName("release_date")
     @Expose
-    private String releaseDate;
+    @ColumnInfo(name = "releaseDate")
+    public  String releaseDate;
+
 
     @SerializedName("vote_average")
     @Expose
+    @ColumnInfo(name = "rating")
     private float rating;
 
     @SerializedName("genre_ids")
     @Expose
+    @Ignore
     private List<Integer> genreIds;
 
+    @ColumnInfo(name = "overview")
     @SerializedName("overview")
     @Expose
     private String overview;
 
+
     @SerializedName("backdrop_path")
     @Expose
+    @ColumnInfo(name = "backdrop")
     private String backdrop;
 
     @SerializedName("genres")
     @Expose
+    @Ignore
     private List<Genre> genres;
 
     public Movie(Parcel in) {
@@ -69,18 +112,6 @@ public class Movie implements Parcelable {
         overview = in.readString();
         backdrop = in.readString();
     }
-
-    public static final Creator<Movie> CREATOR = new Creator<Movie>() {
-        @Override
-        public Movie createFromParcel(Parcel in) {
-            return new Movie(in);
-        }
-
-        @Override
-        public Movie[] newArray(int size) {
-            return new Movie[size];
-        }
-    };
 
 
 
@@ -157,19 +188,5 @@ public class Movie implements Parcelable {
         this.genreIds = genreIds;
     }
 
-    @Override
-    public int describeContents() {
-        return 0;
-    }
 
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeInt(id);
-        dest.writeString(title);
-        dest.writeString(posterPath);
-        dest.writeString(releaseDate);
-        dest.writeFloat(rating);
-        dest.writeString(overview);
-        dest.writeString(backdrop);
-    }
 }

@@ -10,4 +10,6 @@
     <string name="trailer_thumbs">trailer_thumbs</string>
     <string name="summary">Summary</string>
     <string name="add_to_fav">Add to Fav</string>
+    <string name="clear_all_data">Clear</string>
+    <string name="string_message_id">Already added Favorite</string>
 </resources>
