@@ -2,6 +2,7 @@ package com.simax.si_max;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Parcelable;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -13,16 +14,14 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.simax.si_max.Interface.OnFavoritesCallback;
-import com.simax.si_max.Interface.OnMoviesCallback;
+import com.simax.si_max.Interface.RecyclerViewClickListener;
+import com.simax.si_max.model.FavMovie;
 import com.simax.si_max.model.Genre;
 import com.simax.si_max.model.Movie;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-import static com.simax.si_max.DetailsActivity.MOVIE_ID;
-import static com.simax.si_max.DetailsFavoriteActivity.FAVS_ID;
 
 public class FavAdapter extends RecyclerView.Adapter<FavAdapter.MovieViewHolder> {
 
@@ -35,6 +34,9 @@ public class FavAdapter extends RecyclerView.Adapter<FavAdapter.MovieViewHolder>
     private Movie[] mDataSource;
     private Movie[] moviesList;
 
+
+    private RecyclerViewClickListener itemListener;
+
     int mId;
     String mTitle;
     String mRate;
@@ -43,19 +45,10 @@ public class FavAdapter extends RecyclerView.Adapter<FavAdapter.MovieViewHolder>
     String mDate;
     //String mTitle = movie.getTitle();
 
-    public FavAdapter(List<Movie> movies, OnFavoritesCallback callback) {
+    public FavAdapter(List<Movie> movies, OnFavoritesCallback favoritesCallback) {
         this.movies = movies;
-        this.callback = callback;
-        this.allGenres = allGenres;
+        this.callback = favoritesCallback;
 
-    }
-
-    public FavAdapter() {
-
-    }
-
-    public void setMovieData(Movie[] movieData) {
-        this.movies = Arrays.asList(movieData);
     }
 
     @Override
@@ -88,42 +81,45 @@ public class FavAdapter extends RecyclerView.Adapter<FavAdapter.MovieViewHolder>
 
 
 
-    class MovieViewHolder extends RecyclerView.ViewHolder {
+    class MovieViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         TextView releaseDate;
         TextView title;
         TextView rating;
         TextView genres;
         ImageView imageView;
         Movie movie;
+        private RecyclerViewClickListener listener;
 
         void setDataSource(ArrayList<Movie> dataSource) {
             mDataSource = dataSource.toArray(new Movie[0]);
             notifyDataSetChanged();
 
         }
-        public void favs(){
-
-        }
 
         public MovieViewHolder(View itemView) {
             super(itemView);
             mContext = itemView.getContext();
+            this.listener = listener;
             //releaseDate = itemView.findViewById(R.id.item_movie_release_date);
             title = itemView.findViewById(R.id.title);
             rating = itemView.findViewById(R.id.user_rating);
             imageView = itemView.findViewById(R.id.thumbnail);
             //genres = itemView.findViewById(R.id.item_movie_genre);
 
-          /* itemView.setOnClickListener(new View.OnClickListener() {
+          itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    final Intent intent;
+                    callback.onClick(movie);
+                   /* int id = mId;
+                    String title = mTitle;
+                    Intent intent;
                     intent = new Intent(mContext, DetailsFavoriteActivity.class);
-                    intent.putExtra("id",mId);
+                    intent.putExtra("id",id);
+                    intent.putExtra(String.valueOf(id), DetailsFavoriteActivity.FAVS_ID);
                     intent.putExtra("name", mTitle);
-                    mContext.startActivity(intent);
+                    mContext.startActivity(intent);*/
                 }
-            });*/
+            });
         }
 
 
@@ -139,6 +135,7 @@ public class FavAdapter extends RecyclerView.Adapter<FavAdapter.MovieViewHolder>
             //releaseDate.setText(movie.getReleaseDate().split("-")[0]);
             title.setText(mTitle);
             rating.setText(String.valueOf(movie.getRating()));
+
             //genres.setText("");
             Glide.with(itemView)
                     .load(IMAGE_BASE_URL + movie.getPosterPath())
@@ -159,6 +156,14 @@ public class FavAdapter extends RecyclerView.Adapter<FavAdapter.MovieViewHolder>
             }
             return TextUtils.join(", ", movieGenres);
         }
+
+        @Override
+        public void onClick(View v) {
+
+
+
+            // check if item still exists
+            }
     }
     void setFavorites(List<Movie> movies){
         this.movies = movies;
@@ -168,8 +173,9 @@ public class FavAdapter extends RecyclerView.Adapter<FavAdapter.MovieViewHolder>
         movies.addAll(moviesToAppend);
         notifyDataSetChanged();
     }
-    public void clearMovies() {
-        movies.clear();
+    public void clearMovies(List<Movie> movies) {
+        this.movies.clear();
+
 
         notifyDataSetChanged();
     }

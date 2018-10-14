@@ -1,14 +1,18 @@
 package com.simax.si_max;
 
+import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -38,7 +42,6 @@ public class DetailsFavoriteActivity extends AppCompatActivity {
 
     public int intGotPosition;
     private static String POSTER_BASE_URL = "http://image.tmdb.org/t/p/w500";
-    private static String IMAGE_BASE_URL = "http://image.tmdb.org/t/p/w780";
     private static String YOUTUBE_VIDEO_URL = "http://www.youtube.com/watch?v=%s";
     private static String YOUTUBE_THUMBNAIL_URL = "http://img.youtube.com/vi/%s/0.jpg";
 
@@ -71,7 +74,7 @@ public class DetailsFavoriteActivity extends AppCompatActivity {
     private String mMoviePlot;
     private String mMovieReaseDate;
     private float mMovieAverageVote;
-    private String mMoviePosterPath;
+    private String mMovieBackdrop;
 
     int id;
     String rate;
@@ -82,6 +85,7 @@ public class DetailsFavoriteActivity extends AppCompatActivity {
     String thumbnail;
     String movieName;
     String synopsis;
+    String vote;
     float rating;
     String dateOfRelease;
     String posterImage;
@@ -92,64 +96,50 @@ public class DetailsFavoriteActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_favorite_details);
+        setContentView(R.layout.activity_details);
         favRoomDb=FavRoomDb.getDatabase(getApplicationContext());
 
         favModel = ViewModelProviders.of(this).get(FavModel.class);
       //movieId = getIntent().getIntExtra(FAVS_ID, movie.getId());
 
 
-        Intent iin= getIntent();
-        int position = iin.getIntExtra("id",0);
-        name = iin.getStringExtra("name");
-        Movie newMovies = new Movie(position);
-        thumbnail = newMovies.getBackdrop();
-        movieName = newMovies.getTitle();
-        synopsis  = newMovies.getOverview();
-        rating = newMovies.getRating();
-        dateOfRelease = newMovies.getReleaseDate();
+
+
+
         Movie movie = getIntent().getParcelableExtra(FAVS_ID);
 
-        if (movie != null) {
-            mMovieTitle = movie.getTitle();
-            mMovieId = movie.getId();
-            mMoviePlot = movie.getOverview();
-            mMovieReaseDate = movie.getReleaseDate();
-            mMovieAverageVote = movie.getRating();
-            mMoviePosterPath = POSTER_BASE_URL+movie.getPosterPath();
-            favImage =  movie.getPosterPath();
-            }
 
         moviesRepository = MoviesRepository.getInstance();
 
 
         setupToolbar();
 
-        initUI();
 
-        //getMovie();
 
-        final MaterialFavoriteButton favoriteButton = (MaterialFavoriteButton) findViewById(R.id.add_favorite);
+        getFavs();
+
+        final Button favoriteButton = (Button) findViewById(R.id.add_favorite);
+        favoriteButton.setText("Remove Favorite");
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
-        /*favoriteButton.setOnFavoriteChangeListener(
-                new MaterialFavoriteButton.OnFavoriteChangeListener(){
-                    @Override
-                    public void onFavoriteChanged(MaterialFavoriteButton buttonView, boolean favorite){
-                        if (favorite){
-                            addToFavorites();
-                            Snackbar.make(buttonView, "Added to Favorite",
-                                    Snackbar.LENGTH_SHORT).show();
-                        }else{
-                           removeFromFavorites();
-                            Snackbar.make(buttonView, "Removed from Favorite",
-                                    Snackbar.LENGTH_SHORT).show();
-                        }
+        favoriteButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                removeFavorite();
+                Toast.makeText(DetailsFavoriteActivity.this, "Removed from to Favorites", Toast.LENGTH_SHORT).show();
 
-                    }
-                }
-        );*/
+
+            }
+        });
+    }
+
+    public void removeFavorite(){
+        List<Movie> movie = favRoomDb.favDao().getMovieById(movieId);
+        for (Movie movie1 : movie) {
+            favRoomDb.favDao().deleteMovie(movie1);
+            onBackPressed();
+        }
     }
 
     private void setupToolbar() {
@@ -158,11 +148,11 @@ public class DetailsFavoriteActivity extends AppCompatActivity {
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setDisplayShowTitleEnabled(true);
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
         }
     }
+   public void getFavs(){
 
-    private void initUI() {
         movieBackdrop = findViewById(R.id.movieDetailsBackdrop);
         movieTitle = findViewById(R.id.movieDetailsTitle);
         movieGenres = findViewById(R.id.movieDetailsGenres);
@@ -175,18 +165,42 @@ public class DetailsFavoriteActivity extends AppCompatActivity {
         trailersLabel = findViewById(R.id.trailersLabel);
         reviewsLabel = findViewById(R.id.reviewsLabel);
 
-        movieTitle.setText(name);
-       // movieRating.setRating(Float.parseFloat(rate));
-        movieReleaseDate.setText(dateOfRelease);
-        movieOverview.setText(synopsis);
-    }
-    public void getDetails(){
+        Intent intent = getIntent();
+        movieId = intent.getIntExtra(FAVS_ID,-1);
+        List<Movie> movie = favRoomDb.favDao().getMovieById(movieId);
+        for (Movie movie1 : movie){
+            float rate = movie1.getRating();
+            mMovieTitle = movie1.getTitle();
+            mMoviePlot = movie1.getOverview();
+            mMovieAverageVote =movie1.getRating();
+
+            mMovieReaseDate = movie1.getReleaseDate();
+            movieRating.setVisibility(View.VISIBLE);
+            movieRating.setRating(rate / 2 );
+
+            getTrailers(movie1);
+            getReviews(movie1);
+
+            String IMAGE_BASE_URL = "http://image.tmdb.org/t/p/w780";
+            Glide.with(DetailsFavoriteActivity.this)
+                        .load(POSTER_BASE_URL + movie1.getPosterPath())
+                        .apply(RequestOptions.placeholderOf(R.color.colorPrimary))
+                        .into(movieBackdrop);
+
+        }
+        movieTitle.setText(mMovieTitle);
+        movieOverview.setText(mMoviePlot);
+
+
+        movieReleaseDate.setText(mMovieReaseDate);
+
 
     }
+
+
     @Override
     public boolean onSupportNavigateUp() {
         onBackPressed();
-        movieTitle.setText("");
         return true;
     }
 

@@ -40,8 +40,8 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
         
     }
 
-    public MovieAdapter() {
-
+    public MovieAdapter(List<Movie> movies) {
+        this.movies = movies;
     }
 
     public void setMovieData(Movie[] movieData) {
@@ -65,7 +65,9 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
 
     }
 
-
+    public void clearMovies(List<Movie> movies) {
+        movies.clear();
+    }
 
 
     class MovieViewHolder extends RecyclerView.ViewHolder {
@@ -81,9 +83,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
             notifyDataSetChanged();
 
         }
-        public void favs(){
 
-        }
 
         public MovieViewHolder(View itemView) {
             super(itemView);

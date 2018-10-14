@@ -3,11 +3,19 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/clear_data"
+        android:enabled="true"
+        android:icon="@drawable/baseline_delete_forever_white_36dp"
+        android:title="@string/clear_all_data"
+        app:showAsAction="always|withText" />
+    <item
         android:id="@+id/sort"
         android:enabled="true"
         android:icon="@drawable/baseline_sort_white_24dp"
         android:title="@string/sort"
         app:showAsAction="ifRoom" />
+
+
 
 
 

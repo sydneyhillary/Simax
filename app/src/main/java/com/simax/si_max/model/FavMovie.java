@@ -5,6 +5,7 @@ import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.PrimaryKey;
 import android.os.Parcel;
+import android.os.Parcelable;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
@@ -13,10 +14,10 @@ import java.io.Serializable;
 import java.util.List;
 
 @Entity (tableName = "favorites")
-public class Movie implements Serializable  {
+public class FavMovie implements Parcelable{
 
 
-    public Movie(int id, String name, String release_date, float rating, String overview, String poster_path) {
+    public FavMovie(int id, String name, String release_date, float rating, String overview, String poster_path) {
         this.id = id;
         this.posterPath = poster_path;
         this.title = name;
@@ -26,16 +27,40 @@ public class Movie implements Serializable  {
     }
 
 
-    public Movie() {
+    public FavMovie() {
     }
 
-    public Movie(int position) {
+    public FavMovie(int position) {
         this.id = position;
     }
-    public Movie(String fav){
+
+    public FavMovie(String fav){
         this.fav = fav;
     }
 
+
+
+    protected FavMovie(Parcel in) {
+        id = in.readInt();
+        title = in.readString();
+        posterPath = in.readString();
+        releaseDate = in.readString();
+        rating = in.readFloat();
+        overview = in.readString();
+        backdrop = in.readString();
+    }
+
+    public static final Creator<FavMovie> CREATOR = new Creator<FavMovie>() {
+        @Override
+        public FavMovie createFromParcel(Parcel in) {
+            return new FavMovie(in);
+        }
+
+        @Override
+        public FavMovie[] newArray(int size) {
+            return new FavMovie[size];
+        }
+    };
 
     @Override
     public boolean equals(Object obj) {
@@ -57,76 +82,56 @@ public class Movie implements Serializable  {
 
     }
 
-    @SerializedName("id")
-    @Expose
+
     @PrimaryKey
     public int id;
+
+
+
+    @ColumnInfo(name = "title")
+    public String title;
+
+
+    @ColumnInfo(name = "posterPath")
+    public String posterPath;
+
+
+
+    @ColumnInfo(name = "releaseDate")
+    public  String releaseDate;
+
+
+
+    @ColumnInfo(name = "rating")
+    private float rating;
+
+
+    @Ignore
+    private List<Integer> genreIds;
+
+    @ColumnInfo(name = "overview")
+    private String overview;
+
+
+
+    @ColumnInfo(name = "backdrop")
+    private String backdrop;
+
+
+    @Ignore
+    private List<Genre> genres;
+
 
     public String getFav() {
         return fav;
     }
 
-    public String setFav(String fav) {
+    public void setFav(String fav) {
         this.fav = fav;
-        return fav;
     }
 
     @ColumnInfo(name = "fav")
     public String fav;
-
-    @SerializedName("title")
-    @Expose
-    @ColumnInfo(name = "title")
-    public String title;
-
-    @SerializedName("poster_path")
-    @Expose
-    @ColumnInfo(name = "posterPath")
-    public String posterPath;
-
-
-    @SerializedName("release_date")
-    @Expose
-    @ColumnInfo(name = "releaseDate")
-    public  String releaseDate;
-
-
-    @SerializedName("vote_average")
-    @Expose
-    @ColumnInfo(name = "rating")
-    private float rating;
-
-    @SerializedName("genre_ids")
-    @Expose
-    @Ignore
-    private List<Integer> genreIds;
-
-    @ColumnInfo(name = "overview")
-    @SerializedName("overview")
-    @Expose
-    private String overview;
-
-
-    @SerializedName("backdrop_path")
-    @Expose
-    @ColumnInfo(name = "backdrop")
-    private String backdrop;
-
-    @SerializedName("genres")
-    @Expose
-    @Ignore
-    private List<Genre> genres;
-
-    public Movie(Parcel in) {
-        id = in.readInt();
-        title = in.readString();
-        posterPath = in.readString();
-        releaseDate = in.readString();
-        rating = in.readFloat();
-        overview = in.readString();
-        backdrop = in.readString();
-    }
-
 
 
     public String getOverview() {
@@ -203,4 +208,19 @@ public class Movie implements Serializable  {
     }
 
 
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(id);
+        dest.writeString(title);
+        dest.writeString(posterPath);
+        dest.writeString(releaseDate);
+        dest.writeFloat(rating);
+        dest.writeString(overview);
+        dest.writeString(backdrop);
+    }
 }

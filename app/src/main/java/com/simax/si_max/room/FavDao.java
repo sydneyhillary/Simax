@@ -7,6 +7,7 @@ import android.arch.persistence.room.Insert;
 import android.arch.persistence.room.OnConflictStrategy;
 import android.arch.persistence.room.Query;
 
+import com.simax.si_max.model.FavMovie;
 import com.simax.si_max.model.Movie;
 
 import java.util.List;

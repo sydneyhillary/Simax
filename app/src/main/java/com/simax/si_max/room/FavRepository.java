@@ -5,6 +5,7 @@ import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
 import android.os.AsyncTask;
 
+import com.simax.si_max.model.FavMovie;
 import com.simax.si_max.model.Movie;
 
 import java.util.List;
@@ -36,7 +37,7 @@ public class FavRepository implements AsyncResult {
     public void deleteMovieSingle(Movie movie){
          new deleteMovieAsyncTask(mFavDao).execute(movie);
     }
-    public void findMovie(String id) {
+    public void findMovie(int id) {
         queryAsyncTask task = new queryAsyncTask(mFavDao);
         task.delegate = this;
         task.execute(id);
@@ -63,7 +64,7 @@ public class FavRepository implements AsyncResult {
     }
 
     private static class queryAsyncTask extends
-            AsyncTask<String, Void, List<Movie>> {
+            AsyncTask<Integer, Void, List<Movie>> {
 
         private FavDao asyncTaskDao;
         private FavRepository delegate = null;
@@ -73,7 +74,7 @@ public class FavRepository implements AsyncResult {
         }
 
         @Override
-        protected List<Movie> doInBackground(final String... params) {
+        protected List<Movie> doInBackground(final Integer... params) {
             //return asyncTaskDao.findMovie(Integer.valueOf(params[0]));
             return null;
         }

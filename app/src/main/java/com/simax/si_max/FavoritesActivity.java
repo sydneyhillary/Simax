@@ -2,6 +2,7 @@ package com.simax.si_max;
 
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
+import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
@@ -16,6 +17,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.simax.si_max.Interface.OnFavoritesCallback;
+import com.simax.si_max.model.FavMovie;
 import com.simax.si_max.model.Movie;
 import com.simax.si_max.room.FavModel;
 
@@ -32,12 +34,13 @@ public class FavoritesActivity extends AppCompatActivity {
 
     private FavModel favModel;
     private FavAdapter adapter;
+    Context context;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_favorites);
-        adapter = new FavAdapter();
+
         //recyclerView.setAdapter(adapter);
         setupToolbar();
         recyclerView = (RecyclerView) findViewById(R.id.recycler);
@@ -48,11 +51,11 @@ public class FavoritesActivity extends AppCompatActivity {
 
         favModel = ViewModelProviders.of(this).get(FavModel.class);
 
-        favModel.getAllFavs().observe(this, new Observer<List<Movie>>() {
+       /* favModel.getAllFavs().observe(this, new Observer<List<Movie>>() {
             @Override
-            public void onChanged(@Nullable List<Movie> movies) {
+            public void onChanged(@Nullable List<Movie> movies, OnFavoritesCallback callback) {
 
-                adapter = new FavAdapter();
+                adapter = new FavAdapter(movies, callback);
 
                 //adapter.clearMovies();
                 adapter.setFavorites(movies);
@@ -61,7 +64,7 @@ public class FavoritesActivity extends AppCompatActivity {
 
                 //deleteBtn.setVisibility(View.VISIBLE);
 
-            }});
+            }});*/
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -98,13 +101,6 @@ public class FavoritesActivity extends AppCompatActivity {
         onBackPressed();
         return true;
     }
-    OnFavoritesCallback callback = new OnFavoritesCallback() {
-        @Override
-        public void onClick(Movie movie) {
-            Intent intent = new Intent(FavoritesActivity.this, DetailsFavoriteActivity.class);
-            intent.putExtra(FAVS_ID, movie.getId());
-            startActivity(intent);
-        }
-    };
+
 
 }

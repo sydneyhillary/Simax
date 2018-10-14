@@ -32,6 +32,10 @@ public interface TMDbApi {
             @Query("language") String language,
             @Query("page") int page
     );
+    @GET("movie/favorite")
+    Call<MoviesResponse> getFavoriteMovies(
+            @Path("movie_id") int movieId
+    );
     @GET("movie/{movie_id}")
     Call<Movie> getMovie(
             @Path("movie_id") int id,

@@ -31,8 +31,9 @@ public class FavModel extends AndroidViewModel {
     public void insertMovie (Movie movie) {
         mRepository.insert(movie);
     }
-    public void findMovie(String id) {
+    public int findMovie(int id) {
         mRepository.findMovie(id);
+        return id;
     }
 
     public void deleteAllMovie() {

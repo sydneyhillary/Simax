@@ -28,6 +28,7 @@ import com.github.ivbaranov.mfb.MaterialFavoriteButton;
 import com.simax.si_max.Interface.OnGetMovieCallback;
 import com.simax.si_max.Interface.OnGetReviewsCallback;
 import com.simax.si_max.Interface.OnGetTrailersCallback;
+import com.simax.si_max.model.FavMovie;
 import com.simax.si_max.model.Movie;
 import com.simax.si_max.model.MoviesRepository;
 import com.simax.si_max.model.Review;
@@ -78,6 +79,8 @@ public class DetailsActivity extends AppCompatActivity {
     private String mMovieReaseDate;
     private float mMovieAverageVote;
     private String mMoviePosterPath;
+    String favText;
+    String text;
 
     private  Toast mFavoritesToast;
     String thumbnail;
@@ -87,11 +90,39 @@ public class DetailsActivity extends AppCompatActivity {
     String dateOfRelease;
     String posterImage;
     int movie_id;
+    String newText;
+    Button favoriteButton;
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+            final Button favoriteButton = (Button) findViewById(R.id.add_favorite);
+
+            String saveState = favoriteButton.getText().toString();
+
+            outState.putString("save_state",saveState);
+
+
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+
+            final Button favoriteButton = (Button) findViewById(R.id.add_favorite);
+            String saveState = savedInstanceState.getString("save_state");
+            favoriteButton.setText(saveState);
+
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_details);
-        favRoomDb=FavRoomDb.getDatabase(getApplicationContext());
+        favRoomDb = FavRoomDb.getDatabase(getApplicationContext());
+
+
 
         //String gotPosition=getIntent().getStringExtra(MOVIE_ID);
         //intGotPosition=Integer.parseInt(gotPosition);
@@ -104,8 +135,11 @@ public class DetailsActivity extends AppCompatActivity {
             mMoviePlot = movie.getOverview();
             mMovieReaseDate = movie.getReleaseDate();
             mMovieAverageVote = movie.getRating();
-            mMoviePosterPath = POSTER_BASE_URL+movie.getPosterPath();
-            favImage =  movie.getPosterPath();}
+            mMoviePosterPath = POSTER_BASE_URL + movie.getPosterPath();
+            favImage = movie.getPosterPath();
+
+        }
+
 
         moviesRepository = MoviesRepository.getInstance();
 
@@ -116,36 +150,41 @@ public class DetailsActivity extends AppCompatActivity {
 
         getMovie();
 
-        final MaterialFavoriteButton favoriteButton = (MaterialFavoriteButton) findViewById(R.id.add_favorite);
+        favoriteButton = (Button) findViewById(R.id.add_favorite);
+
+
+
+
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
-        favoriteButton.setOnFavoriteChangeListener(
-                new MaterialFavoriteButton.OnFavoriteChangeListener(){
-                    @Override
-                    public void onFavoriteChanged(MaterialFavoriteButton buttonView, boolean favorite){
-                        if (favorite){
-                            addToFavorites();
-                            Snackbar.make(buttonView, "Added to Favorite",
-                                    Snackbar.LENGTH_SHORT).show();
-                        }else{
-                            favoriteButton.setVisibility(View.GONE);
+        favoriteButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                text  = favoriteButton.getText().toString();
 
+                if (text.equals("Mark Favorite")) {
+                    addToFavorites();
+                    Snackbar.make(v, "Added to Favorite",
+                            Snackbar.LENGTH_SHORT).show();
+                    favoriteButton.setText("Unmark Favorite");
+                } else if (text.equals("Unmark Favorite")) {
+                    removeFromFavorites();
 
-                            Toast toast = Toast.makeText(DetailsActivity.this, R.string.string_message_id, Toast.LENGTH_LONG);
-                            toast.setGravity(Gravity.FILL_HORIZONTAL, 0, 0);
-                            View view = toast.getView();
-                            view.setBackgroundResource(R.drawable.custom_view);
-                            TextView text = (TextView) view.findViewById(android.R.id.message);
-                            text.setTextColor(Color.parseColor("#C0C0C0"));
-                            /*Here you can do anything with above textview like text.setTextColor(Color.parseColor("#000000"));*/
-                            toast.show();
-                        }
+                    favoriteButton.setText("Mark Favorite");
 
-                    }
+                    Toast toast = Toast.makeText(DetailsActivity.this, R.string.string_message_id, Toast.LENGTH_LONG);
+                    toast.setGravity(Gravity.FILL_HORIZONTAL, 0, 0);
+                    View view = toast.getView();
+                    view.setBackgroundResource(R.drawable.custom_view);
+                    TextView text1 = (TextView) view.findViewById(android.R.id.message);
+                    text1.setTextColor(Color.parseColor("#C0C0C0"));
+                    /*Here you can do anything with above textview like text.setTextColor(Color.parseColor("#000000"));*/
+                    toast.show();
                 }
-        );
 
+            }
+        });
     }
 
     private void setupToolbar() {
@@ -181,6 +220,12 @@ public class DetailsActivity extends AppCompatActivity {
                 dateOfRelease = movie.getReleaseDate();
                 synopsis = movie.getOverview();
                 posterImage = movie.getPosterPath();
+                favText = movie.getFav();
+                if (favText == null){
+                    favoriteButton.setText("Mark Favorite");
+                }else {
+                    favoriteButton.setText(favText);
+                }
 
 
                 movieTitle.setText(movieName);
@@ -212,6 +257,7 @@ public class DetailsActivity extends AppCompatActivity {
     @Override
     public boolean onSupportNavigateUp() {
         onBackPressed();
+
         return true;
     }
 
@@ -277,8 +323,7 @@ public class DetailsActivity extends AppCompatActivity {
         });
     }
     private void removeFromFavorites() {
-        //Movie movie =
-        int id = movieId;
+
        favRoomDb.favDao().deleteMovie(movie);
     }
 
@@ -290,17 +335,19 @@ public class DetailsActivity extends AppCompatActivity {
         String overview = movieOverview.getText().toString();
         String poster_path = posterImage;
 
-        Movie newMovie = new Movie();
+        FavMovie newMovie = new FavMovie();
         newMovie.setId(id);
         newMovie.setTitle(name);
         newMovie.setPosterPath(poster_path);
         newMovie.setRating(rating);
         newMovie.setOverview(overview);
         newMovie.setReleaseDate(release_date);
+        newMovie.setFav(favoriteButton.getText().toString());
 
 
 
-        Movie movie = new Movie(id, name, release_date, rating, overview, poster_path);
+
+        movie = new Movie(id, name, release_date, rating, overview, poster_path);
 
         favRoomDb.favDao().insert(movie);
         //Toast.makeText(this, "add successful", Toast.LENGTH_SHORT).show();

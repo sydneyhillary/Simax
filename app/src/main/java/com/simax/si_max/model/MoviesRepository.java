@@ -1,14 +1,20 @@
 package com.simax.si_max.model;
 
 import android.annotation.SuppressLint;
+import android.arch.lifecycle.Observer;
+import android.arch.lifecycle.ViewModelProviders;
+import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
 import com.simax.si_max.BuildConfig;
 
+import com.simax.si_max.FavAdapter;
+import com.simax.si_max.Interface.OnFavoritesCallback;
 import com.simax.si_max.Interface.OnGetGenresCallback;
 import com.simax.si_max.Interface.OnGetMovieCallback;
 import com.simax.si_max.Interface.OnGetReviewsCallback;
@@ -17,6 +23,7 @@ import com.simax.si_max.Interface.TMDbApi;
 import com.simax.si_max.Interface.onGetMoviesCallback;
 import com.simax.si_max.MainActivity;
 import com.simax.si_max.MovieAdapter;
+import com.simax.si_max.room.FavModel;
 
 
 import java.util.ArrayList;
@@ -44,6 +51,7 @@ public class MoviesRepository {
 
     private TMDbApi api;
     private List<Movie> movieList;
+    private FavModel favModel;
 
     private MovieAdapter adapter;
 
@@ -97,8 +105,7 @@ public class MoviesRepository {
                         .enqueue(call);
                 break;
             case FAVORITE:
-                movieList = new ArrayList<>();
-                //getAllFavorite();
+
                 break;
             case POPULAR:
             default:
@@ -107,6 +114,7 @@ public class MoviesRepository {
                 break;
         }
     }
+
 
 
 
@@ -133,6 +141,7 @@ public class MoviesRepository {
                     }
                 });
     }
+
     public void getTrailers(int movieId, final OnGetTrailersCallback callback) {
         api.getTrailers(movieId, BuildConfig.API_KEY, LANGUAGE)
                 .enqueue(new Callback<TrailerResponse>() {
